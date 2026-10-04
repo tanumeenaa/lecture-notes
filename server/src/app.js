@@ -1,0 +1,22 @@
+import cors from 'cors';
+import express from 'express';
+import { env } from './config/env.js';
+import { requireAuth } from './middleware/auth.js';
+import { errorHandler } from './middleware/errorHandler.js';
+import { authRoutes } from './routes/authRoutes.js';
+import { subjectRoutes } from './routes/subjectRoutes.js';
+import { timetableRoutes } from './routes/timetableRoutes.js';
+import { lectureRoutes } from './routes/lectureRoutes.js';
+
+export const app = express();
+const allowedOrigins = env.CLIENT_URL.split(',').map((origin) => origin.trim()).filter(Boolean);
+app.use(cors({ origin: allowedOrigins }));
+app.use(express.json({ limit: '2mb' }));
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.get('/api/health', (req, res) => res.json({ status: 'ok' }));
+app.use('/api/auth', authRoutes);
+app.use('/api/subjects', requireAuth, subjectRoutes);
+app.use('/api/timetable', requireAuth, timetableRoutes);
+app.use('/api/lectures', requireAuth, lectureRoutes);
+app.use((req, res) => res.status(404).json({ message: 'Not found.' }));
+app.use(errorHandler);
